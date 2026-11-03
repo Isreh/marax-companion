@@ -2,10 +2,22 @@
 
 An extended version of [alexrus/marax_timer](https://github.com/alexrus/marax_timer). The ESP8266 still shows the shot timer on its OLED, and it also sends the machine's status over WiFi to a Windows PC.
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="resources/dashboard-dark.png">
+  <img alt="Statistics page: the machine is heated up at 93 °C, the temperature curve of the running session with two espressos and one hot water draw, espressos per day, heat-up time, shot time and the hours of the week coffee is made" src="resources/dashboard-light.png">
+</picture>
+
 - **Tray icon** with the heat exchanger temperature, colored by state: heating up, ready, pump running, water tank.
 - **Statistics in the browser** at `http://localhost:8420`, also from a phone in the home network: the temperature curve of every session, espressos per day, heat-up time, shot time and the hours you make coffee.
 - **Espresso or hot water:** the Mara X V2 reports when the brew group is in use, so hot water drawn from the steam boiler doesn't count as coffee.
 - CSV export for Excel. No cloud, everything stays on your PC.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="resources/dashboard-phone-dark.png">
+  <img width="300" alt="The same page on a phone" src="resources/dashboard-phone-light.png">
+</picture>
+
+The screenshots show made-up sample data. The page follows the light or dark mode of the device.
 
 Tested with a Lelit Mara X V2 (PL62X, firmware 1.09) and a NodeMCU with a CH340 USB chip. The setup guide, the tray app and the web page are in German: [ANLEITUNG.md](ANLEITUNG.md).
 
