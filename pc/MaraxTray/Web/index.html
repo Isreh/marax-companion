@@ -1,0 +1,1140 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>MaraX</title>
+<link rel="icon" id="favicon" href="data:,">
+<style>
+:root {
+  color-scheme: light;
+  --surface: #fcfcfb;
+  --wash: #f0efec;
+  --ink: #0b0b0b;
+  --ink-2: #52514e;
+  --muted: #6e6c67;
+  --grid: #e1e0d9;
+  --axis: #c3c2b7;
+  --hx: #2a78d6;
+  --steam: #eb6834;
+  --target: #898781;
+  --heater: #c3c2b7;
+  --good: #0ca30c;
+  --serious: #ec835a;
+  --critical: #d03b3b;
+  --pump: #2a78d6;
+  --idle: #898781;
+  --h1: #cde2fb;
+  --h2: #9ec5f4;
+  --h3: #5598e7;
+  --h4: #256abf;
+  --h5: #104281;
+  --shadow: 0 6px 20px rgba(11, 11, 11, .12);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --surface: #1a1a19;
+    --wash: #262624;
+    --ink: #f0efec;
+    --ink-2: #c3c2b7;
+    --muted: #9a988f;
+    --grid: #2c2c2a;
+    --axis: #383835;
+    --hx: #3987e5;
+    --steam: #d95926;
+    --target: #898781;
+    --heater: #4a4a46;
+    --pump: #3987e5;
+    --h1: #104281;
+    --h2: #1c5cab;
+    --h3: #2a78d6;
+    --h4: #5598e7;
+    --h5: #86b6ef;
+    --shadow: 0 6px 20px rgba(0, 0, 0, .5);
+  }
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { scroll-behavior: smooth; scrollbar-color: var(--axis) transparent; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { animation: none !important; transition: none !important; } }
+::selection { background: var(--hx); color: #fff; }
+body {
+  margin: 0;
+  background: var(--surface);
+  color: var(--ink);
+  font: 400 1rem/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+  -webkit-text-size-adjust: 100%;
+}
+h1, h2, h3, p, dl, dd, figure { margin: 0; }
+button, a { color: inherit; font: inherit; }
+:focus-visible { outline: 2px solid var(--hx); outline-offset: 2px; border-radius: 4px; }
+a { text-underline-offset: 3px; text-decoration-color: var(--axis); }
+a:hover { text-decoration-color: currentColor; }
+
+.page { max-width: 1320px; margin: 0 auto; padding: 0 32px 64px; }
+
+.top { display: flex; align-items: baseline; gap: 32px; padding: 20px 0 16px; }
+.brand { font-weight: 650; letter-spacing: -.01em; font-size: 1.125rem; }
+.top nav { display: flex; gap: 20px; font-size: .875rem; }
+.top nav a { color: var(--ink-2); text-decoration: none; }
+.top nav a:hover { color: var(--ink); }
+.conn { margin-left: auto; font-size: .8125rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+.alert { display: none; align-items: center; gap: 10px; margin-bottom: 16px; padding: 10px 14px; border-radius: 6px; background: var(--wash); font-size: .9375rem; }
+.alert.on { display: flex; }
+.alert svg { flex: none; color: var(--critical); }
+
+.now { display: grid; grid-template-columns: 264px minmax(0, 1fr); gap: 40px; padding-bottom: 40px; }
+.readout { display: flex; flex-direction: column; min-width: 0; }
+.state { display: flex; align-items: center; gap: 10px; font-size: 1.375rem; line-height: 1.25; font-weight: 600; letter-spacing: -.01em; text-wrap: balance; }
+.state svg { flex: none; color: var(--state, var(--idle)); transition: color .2s; }
+.state-detail { margin-top: 6px; color: var(--ink-2); font-size: .9375rem; min-height: 2.8em; }
+.hero { margin-top: 20px; font-size: 5.25rem; line-height: 1; font-weight: 600; letter-spacing: -.035em; }
+.hero small { font-size: 1.75rem; font-weight: 500; letter-spacing: 0; color: var(--ink-2); margin-left: 4px; }
+.hero-note { margin-top: 8px; color: var(--ink-2); font-size: .9375rem; min-height: 1.5em; }
+.gauges { margin-top: 24px; border-top: 1px solid var(--grid); }
+.gauges div { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--grid); }
+.gauges dt { color: var(--ink-2); font-size: .9375rem; }
+.gauges dd { font-weight: 550; font-variant-numeric: tabular-nums; text-align: right; }
+
+.trace { min-width: 0; }
+.trace-head { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; min-height: 36px; }
+.trace-head h2 { font-size: 1.0625rem; font-weight: 600; }
+.steps { display: inline-flex; gap: 2px; }
+.icon-btn { display: grid; place-items: center; width: 32px; height: 32px; padding: 0; border: 0; border-radius: 6px; background: none; cursor: pointer; color: var(--ink-2); transition: background .15s; }
+.icon-btn:hover:not(:disabled) { background: var(--wash); color: var(--ink); }
+.icon-btn:disabled { color: var(--axis); cursor: default; }
+.link-btn { padding: 4px 8px; border: 0; border-radius: 6px; background: none; color: var(--ink-2); font-size: .8125rem; cursor: pointer; transition: background .15s; }
+.link-btn:hover { background: var(--wash); color: var(--ink); }
+#traceTable { margin-left: auto; }
+
+.legend { display: flex; flex-wrap: wrap; gap: 4px 18px; margin: 4px 0 2px; color: var(--ink-2); font-size: .8125rem; }
+.legend span { display: inline-flex; align-items: center; gap: 7px; }
+.key-line { width: 16px; height: 2px; border-radius: 1px; background: var(--c); }
+.key-rect { width: 12px; height: 8px; border-radius: 2px; background: var(--c); }
+.key-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--c); }
+.key-ring { width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--c); }
+
+.plot { position: relative; touch-action: pan-y; cursor: crosshair; border-radius: 4px; }
+.plot svg { display: block; width: 100%; overflow: visible; }
+.plot text { fill: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.plot text.strong, .plot text.mid { paint-order: stroke; stroke: var(--surface); stroke-width: 4px; stroke-linejoin: round; }
+.plot text.strong { fill: var(--ink); font-weight: 600; }
+.plot text.mid { fill: var(--ink-2); }
+.plot .bar:hover, .plot .bar.on { filter: brightness(1.12); }
+.empty { display: grid; place-items: center; text-align: center; min-height: 180px; padding: 24px; color: var(--ink-2); font-size: .9375rem; text-wrap: balance; }
+.trace .empty { min-height: 340px; }
+.loading { opacity: .55; transition: opacity .2s; }
+
+.tip { position: absolute; z-index: 5; pointer-events: none; min-width: 124px; padding: 8px 10px; border-radius: 6px; background: var(--surface); box-shadow: var(--shadow), 0 0 0 1px var(--grid); font-size: .8125rem; }
+.tip-title { color: var(--ink-2); margin-bottom: 3px; white-space: nowrap; }
+.tip-row { display: grid; grid-template-columns: 12px auto 1fr; align-items: center; gap: 7px; white-space: nowrap; }
+.tip-row i { height: 2px; border-radius: 1px; }
+.tip-row b { font-weight: 600; font-variant-numeric: tabular-nums; }
+.tip-row span { color: var(--ink-2); }
+
+.band { border-top: 1px solid var(--grid); padding-top: 28px; margin-top: 8px; }
+.band-head { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; margin-bottom: 20px; }
+.band-head h2 { font-size: 1.375rem; font-weight: 600; letter-spacing: -.01em; }
+.range { display: inline-flex; padding: 2px; border-radius: 8px; background: var(--wash); }
+.range button { padding: 4px 12px; border: 0; border-radius: 6px; background: none; color: var(--ink-2); font-size: .875rem; cursor: pointer; }
+.range button:hover { color: var(--ink); }
+.range button[aria-pressed="true"] { background: var(--surface); color: var(--ink); font-weight: 600; box-shadow: 0 1px 2px rgba(11, 11, 11, .12); }
+
+.stats { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 16px 24px; padding-bottom: 28px; }
+.stats dt { color: var(--ink-2); font-size: .875rem; }
+.stats dd { font-size: 1.75rem; line-height: 1.2; font-weight: 600; letter-spacing: -.02em; }
+.stats dd small { font-size: 1rem; font-weight: 500; letter-spacing: 0; color: var(--ink-2); }
+.stats dd.extra { margin-top: 2px; font-size: .875rem; line-height: 1.4; font-weight: 400; letter-spacing: 0; color: var(--ink-2); }
+
+.charts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border-top: 1px solid var(--grid); }
+.fig { min-width: 0; padding: 20px 0 24px; }
+.fig:nth-child(odd) { padding-right: 32px; border-right: 1px solid var(--grid); }
+.fig:nth-child(even) { padding-left: 32px; }
+.fig:nth-child(n + 3) { border-top: 1px solid var(--grid); }
+.fig figcaption { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+.fig h3 { font-size: 1.0625rem; font-weight: 600; }
+.fig figcaption p { color: var(--ink-2); font-size: .875rem; }
+.scale { display: flex; align-items: center; gap: 3px; margin-top: 8px; color: var(--ink-2); font-size: .8125rem; }
+.scale i { width: 16px; height: 10px; border-radius: 2px; }
+.scale span:first-child { margin-right: 5px; }
+.scale span:last-child { margin-left: 5px; }
+
+.tabs { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; margin-bottom: 8px; }
+.exports { margin-left: auto; font-size: .8125rem; color: var(--ink-2); display: flex; flex-wrap: wrap; gap: 4px 12px; }
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: .9375rem; }
+th { text-align: left; font-weight: 500; color: var(--ink-2); font-size: .8125rem; white-space: nowrap; }
+th, td { padding: 8px 16px 8px 0; border-bottom: 1px solid var(--grid); }
+td { font-variant-numeric: tabular-nums; }
+.num { text-align: right; padding-right: 20px; }
+td button { padding: 0; border: 0; background: none; cursor: pointer; text-decoration: underline; text-decoration-color: var(--axis); text-underline-offset: 3px; }
+td button:hover { text-decoration-color: currentColor; }
+tr.current td { background: var(--wash); }
+.note { margin-top: 12px; color: var(--ink-2); font-size: .875rem; max-width: 72ch; }
+
+@media (max-width: 1000px) {
+  .now { grid-template-columns: minmax(0, 1fr); gap: 24px; }
+  .state-detail { min-height: 0; }
+  .gauges { display: grid; grid-template-columns: 1fr 1fr; column-gap: 24px; }
+  .stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 760px) {
+  .page { padding: 0 16px 48px; }
+  .top { gap: 16px; flex-wrap: wrap; }
+  .conn { display: none; }
+  .hero { font-size: 4.25rem; }
+  .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .charts { grid-template-columns: minmax(0, 1fr); }
+  .fig, .fig:nth-child(odd), .fig:nth-child(even) { padding: 20px 0 24px; border-right: 0; }
+  .fig:nth-child(n + 2) { border-top: 1px solid var(--grid); }
+  .exports { margin-left: 0; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="top">
+    <div class="brand">MaraX</div>
+    <nav aria-label="Abschnitte">
+      <a href="#verlauf">Verlauf</a>
+      <a href="#statistik">Statistik</a>
+      <a href="#protokoll">Protokoll</a>
+    </nav>
+    <div class="conn" id="conn"></div>
+  </header>
+
+  <div class="alert" id="alert" role="status"></div>
+
+  <main>
+    <section class="now" id="verlauf" aria-label="Aktueller Zustand und Temperaturverlauf">
+      <div class="readout">
+        <h1 class="state" id="state"></h1>
+        <p class="state-detail" id="stateDetail"></p>
+        <p class="hero" aria-live="off"><span id="heroValue">--</span><small>°C</small></p>
+        <p class="hero-note" id="heroNote">HX-Temperatur</p>
+        <dl class="gauges">
+          <div><dt>Dampfkessel</dt><dd id="gSteam">--</dd></div>
+          <div><dt>Soll</dt><dd id="gTarget">--</dd></div>
+          <div><dt>Heizelement</dt><dd id="gHeat">--</dd></div>
+          <div><dt>Pumpe</dt><dd id="gPump">--</dd></div>
+        </dl>
+      </div>
+
+      <div class="trace">
+        <div class="trace-head">
+          <h2 id="traceTitle">Temperaturverlauf</h2>
+          <span class="steps">
+            <button class="icon-btn" id="prevSession" aria-label="Frühere Einschaltung"></button>
+            <button class="icon-btn" id="nextSession" aria-label="Spätere Einschaltung"></button>
+          </span>
+          <button class="link-btn" id="traceLatest" hidden>Zur aktuellen</button>
+          <button class="link-btn" id="traceTable">Tabelle</button>
+        </div>
+        <div class="legend" id="traceLegend">
+          <span><i class="key-line" style="--c:var(--hx)"></i>HX</span>
+          <span><i class="key-line" style="--c:var(--steam)"></i>Dampfkessel</span>
+          <span><i class="key-line" style="--c:var(--target)"></i>Dampf-Soll</span>
+          <span><i class="key-rect" style="--c:var(--heater)"></i>Heizelement an</span>
+          <span><i class="key-dot" style="--c:var(--ink)"></i>Espresso</span>
+          <span><i class="key-ring" style="--c:var(--ink)"></i>Heißwasser</span>
+        </div>
+        <div class="plot" id="tracePlot"></div>
+        <div class="table-wrap" id="traceTableView" hidden></div>
+      </div>
+    </section>
+
+    <section class="band" id="statistik" aria-labelledby="statHead">
+      <div class="band-head">
+        <h2 id="statHead">Statistik</h2>
+        <div class="range" role="group" aria-label="Zeitraum" id="range">
+          <button data-days="7">7 Tage</button>
+          <button data-days="30">30 Tage</button>
+          <button data-days="90">90 Tage</button>
+          <button data-days="0">Alles</button>
+        </div>
+      </div>
+      <dl class="stats" id="stats"></dl>
+      <div class="charts">
+        <figure class="fig" id="figDaily">
+          <figcaption><div><h3>Kaffees pro Tag</h3></div><button class="link-btn" data-table>Tabelle</button></figcaption>
+          <div class="plot"></div><div class="table-wrap" hidden></div>
+        </figure>
+        <figure class="fig" id="figHeatup">
+          <figcaption><div><h3>Aufheizdauer</h3><p>Nur Kaltstarts mit bekannter Startzeit</p></div><button class="link-btn" data-table>Tabelle</button></figcaption>
+          <div class="plot"></div><div class="table-wrap" hidden></div>
+        </figure>
+        <figure class="fig" id="figShots">
+          <figcaption><div><h3>Bezugsdauer</h3><p>Jeder Punkt ist ein Espresso</p></div><button class="link-btn" data-table>Tabelle</button></figcaption>
+          <div class="plot"></div><div class="table-wrap" hidden></div>
+        </figure>
+        <figure class="fig" id="figHours">
+          <figcaption><div><h3>Wann du Kaffee machst</h3></div><button class="link-btn" data-table>Tabelle</button></figcaption>
+          <div class="plot"></div><div class="table-wrap" hidden></div>
+          <div class="scale" aria-hidden="true"><span>wenig</span><i style="background:var(--h1)"></i><i style="background:var(--h2)"></i><i style="background:var(--h3)"></i><i style="background:var(--h4)"></i><i style="background:var(--h5)"></i><span>viel</span></div>
+        </figure>
+      </div>
+    </section>
+
+    <section class="band" id="protokoll" aria-labelledby="logHead">
+      <div class="band-head">
+        <h2 id="logHead">Protokoll</h2>
+        <div class="range" role="group" aria-label="Tabelle wählen" id="tabs">
+          <button data-tab="sessions">Einschaltungen</button>
+          <button data-tab="shots">Bezüge</button>
+          <button data-tab="events">Ereignisse</button>
+        </div>
+        <div class="exports">
+          <span>CSV für Excel:</span>
+          <a href="/export/einschaltungen.csv">Einschaltungen</a>
+          <a href="/export/pumpenlaeufe.csv">Pumpenläufe</a>
+          <a href="/export/ereignisse.csv">Ereignisse</a>
+          <a href="/export/messwerte.csv">Alle Messwerte</a>
+        </div>
+      </div>
+      <div class="table-wrap" id="logTable"></div>
+      <p class="note" id="note"></p>
+    </section>
+  </main>
+</div>
+
+<script>
+'use strict';
+
+const LOCALE = 'de-DE';
+const LIVE_INTERVAL = 2000;
+const CURVE_INTERVAL = 10000;
+const GAP_MS = 60000;
+
+const ICONS = {
+  check: '<path d="M4.5 12.5l5 5 10-11"/>',
+  flame: '<path d="M12 3c.6 3.2-1.2 4.8-2.7 6.5C8 11 7 12.4 7 14.4a5 5 0 0 0 10 0c0-1.8-.8-3.2-1.8-4.3-.3 1.2-1 2-2 2.3.5-3-.1-6.700-1.200-9.400z"/>',
+  drop: '<path d="M12 3.500s6 6.400 6 10.800a6 6 0 0 1-12 0C6 9.900 12 3.500 12 3.500z"/>',
+  pump: '<path d="M4 12h3l2.500-5 5 10 2.500-5h3"/>',
+  off: '<circle cx="12" cy="12" r="8"/><path d="M8 12h8"/>',
+  alert: '<path d="M12 4l9 16H3z"/><path d="M12 10v4.500M12 17.200v.1"/>',
+  left: '<path d="M14.500 6l-6 6 6 6"/>',
+  right: '<path d="M9.500 6l6 6-6 6"/>',
+};
+
+const PHASE_COLOR = { Ready: '--good', Heating: '--serious' };
+
+const state = {
+  days: 30,
+  tab: 'sessions',
+  live: null,
+  config: { minShotSeconds: 15, maxShotSeconds: 90, coldStartHxTemp: 50 },
+  summary: null,
+  daily: [],
+  hours: [],
+  sessions: [],
+  shots: [],
+  events: [],
+  detail: null,
+  selected: null,
+  scrubbing: false,
+  tables: new Set(),
+};
+
+const $ = id => document.getElementById(id);
+const machineOn = () => state.live?.phase === 'Heating' || state.live?.phase === 'Ready';
+const css = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+
+function el(tag, attrs, ...children) {
+  const node = document.createElement(tag);
+  for (const [key, value] of Object.entries(attrs || {})) {
+    if (key === 'class') node.className = value;
+    else if (key.startsWith('on')) node[key] = value;
+    else if (value === true) node.setAttribute(key, '');
+    else if (value !== false && value != null) node.setAttribute(key, value);
+  }
+  node.append(...children.filter(child => child != null));
+  return node;
+}
+
+function sv(tag, attrs, ...children) {
+  const node = document.createElementNS('http://www.w3.org/2000/svg', tag);
+  for (const [key, value] of Object.entries(attrs || {})) {
+    if (value != null) node.setAttribute(key, value);
+  }
+  node.append(...children.filter(child => child != null));
+  return node;
+}
+
+function icon(name, size = 22) {
+  const node = sv('svg', {
+    width: size, height: size, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor',
+    'stroke-width': 2, 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'aria-hidden': 'true',
+  });
+  node.innerHTML = ICONS[name];
+  return node;
+}
+
+const number = (value, digits = 0) => value.toLocaleString(LOCALE, { minimumFractionDigits: digits, maximumFractionDigits: digits });
+const clock = ms => new Date(ms).toLocaleTimeString(LOCALE, { hour: '2-digit', minute: '2-digit' });
+const clockSeconds = ms => new Date(ms).toLocaleTimeString(LOCALE);
+const dateShort = ms => new Date(ms).toLocaleDateString(LOCALE, { day: '2-digit', month: '2-digit' });
+const dateFull = ms => new Date(ms).toLocaleDateString(LOCALE, { weekday: 'long', day: 'numeric', month: 'long' });
+const dateCompact = ms => new Date(ms).toLocaleDateString(LOCALE, { weekday: 'short', day: 'numeric', month: 'short' });
+const dayKey = date => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+const plural = (count, one, many) => `${number(count)} ${count === 1 ? one : many}`;
+
+function duration(seconds) {
+  if (seconds == null) return '–';
+  const total = Math.round(seconds);
+  const hours = Math.floor(total / 3600);
+  const minutes = Math.floor(total / 60) % 60;
+  if (hours > 0) return `${hours}:${String(minutes).padStart(2, '0')} h`;
+  return `${minutes}:${String(total % 60).padStart(2, '0')} min`;
+}
+
+async function api(path) {
+  const response = await fetch(path);
+  if (response.status === 404) return null;
+  if (!response.ok) throw new Error(response.status);
+  return response.json();
+}
+
+function niceStep(span, count) {
+  const raw = span / Math.max(1, count);
+  const magnitude = 10 ** Math.floor(Math.log10(raw));
+  const unit = raw / magnitude;
+  return (unit <= 1 ? 1 : unit <= 2 ? 2 : unit <= 5 ? 5 : 10) * magnitude;
+}
+
+function ticks(min, max, count) {
+  const step = niceStep(max - min, count);
+  const result = [];
+  for (let value = Math.ceil(min / step) * step; value <= max + step / 1000; value += step) result.push(value);
+  return result;
+}
+
+function chartSvg(width, height, label) {
+  return sv('svg', { viewBox: `0 0 ${width} ${height}`, height, role: 'img', 'aria-label': label });
+}
+
+function yAxis(root, values, y, left, right, format) {
+  for (const value of values) {
+    root.append(sv('line', { x1: left, x2: right, y1: y(value), y2: y(value), stroke: 'var(--grid)' }));
+    root.append(sv('text', { x: left - 8, y: y(value) + 4, 'text-anchor': 'end' }, format(value)));
+  }
+}
+
+// One tooltip per chart. Works with the pointer, by touch and with the arrow keys.
+function attachHover(host, { count, pick, show, clear, rowStep = 0 }) {
+  let active = -1;
+  const tip = el('div', { class: 'tip', hidden: true });
+  host.append(tip);
+
+  function set(index) {
+    if (index === active) return;
+    active = index;
+    if (index < 0) {
+      tip.hidden = true;
+      if (clear) clear();
+      return;
+    }
+    const data = show(index);
+    tip.replaceChildren(el('div', { class: 'tip-title' }, data.title), ...data.rows.map(row => el('div', { class: 'tip-row' },
+      el('i', { style: `background:${row.color || 'transparent'}` }), el('b', {}, row.value), el('span', {}, row.label))));
+    tip.hidden = false;
+    const left = data.x + 14 + tip.offsetWidth > host.clientWidth ? data.x - tip.offsetWidth - 14 : data.x + 14;
+    tip.style.left = `${Math.max(0, left)}px`;
+    tip.style.top = `${Math.max(0, Math.min(host.clientHeight - tip.offsetHeight, data.y - tip.offsetHeight / 2))}px`;
+  }
+
+  function fromPointer(event) {
+    const box = host.getBoundingClientRect();
+    set(pick(event.clientX - box.left, event.clientY - box.top));
+  }
+
+  host.tabIndex = 0;
+  host.onpointermove = fromPointer;
+  host.onpointerdown = fromPointer;
+  host.onpointerleave = () => set(-1);
+  host.onfocus = () => { if (active < 0 && host.matches(':focus-visible')) set(count - 1); };
+  host.onblur = () => set(-1);
+  host.onkeydown = event => {
+    const move = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -rowStep, ArrowDown: rowStep }[event.key];
+    if (event.key === 'Escape') set(-1);
+    if (!move) return;
+    event.preventDefault();
+    set(Math.min(count - 1, Math.max(0, (active < 0 ? count : active) + move)));
+  };
+}
+
+function renderLive() {
+  const live = state.live;
+  if (!live) return;
+  const session = state.sessions.find(s => s.id === live.sessionId);
+  const on = machineOn();
+
+  let name = 'off';
+  let color = '--idle';
+  if (live.waterMissing) { name = 'drop'; color = '--critical'; }
+  else if (live.pump) { name = 'pump'; color = '--pump'; }
+  else if (live.phase === 'Ready') { name = 'check'; color = PHASE_COLOR.Ready; }
+  else if (live.phase === 'Heating') { name = 'flame'; color = PHASE_COLOR.Heating; }
+  else if (live.phase === 'UnknownFormat') { name = 'alert'; color = '--serious'; }
+
+  // the machine reports the brew group, without it the pump only refills the steam boiler
+  const pumpText = live.brewing
+    ? (live.shotSeconds > 0 ? `Bezug läuft, ${live.shotSeconds} s` : 'Bezug läuft')
+    : 'Kessel wird gefüllt';
+  const headline = live.pump && !live.waterMissing ? pumpText : live.headline;
+  const stateNode = $('state');
+  stateNode.replaceChildren(icon(name, 26), el('span', {}, headline));
+  stateNode.style.setProperty('--state', `var(${color})`);
+
+  let detail = '';
+  if (live.waterMissing) detail = 'Die Maschine meldet keinen Dampf-Sollwert. Das passiert, wenn sie ohne Wasser startet.';
+  else if (live.phase === 'Ready' && session?.readyAt) detail = `Seit ${clock(session.readyAt)} Uhr${session.heatupSeconds != null ? `, nach ${duration(session.heatupSeconds)}` : ''}`;
+  else if (live.phase === 'Heating' && session) detail = `Eingeschaltet ${session.startExact ? 'um' : 'spätestens um'} ${clock(session.startedAt)} Uhr`;
+  else if (live.phase === 'MachineOff') detail = 'Der ESP ist erreichbar, von der Maschine kommt nichts.';
+  else if (live.phase === 'NoData') detail = 'Maschine aus oder ESP nicht im WLAN.';
+  else if (live.phase === 'UnknownFormat') detail = 'Der ESP empfängt Zeilen, die er nicht lesen kann.';
+  $('stateDetail').textContent = detail;
+
+  if (!state.scrubbing) {
+    $('heroValue').textContent = live.hx ?? '--';
+    $('heroNote').textContent = on ? 'HX-Temperatur' : 'Keine aktuelle Temperatur';
+    $('gSteam').textContent = live.steam != null ? `${live.steam} °C` : '--';
+    $('gTarget').textContent = live.target != null ? `${live.target} °C` : '--';
+    $('gHeat').textContent = live.heating == null ? '--' : live.heating ? 'an' : 'aus';
+    $('gPump').textContent = !on && !live.pump ? '--' : live.pump ? 'läuft' : 'aus';
+  }
+
+  $('conn').textContent = live.esp ? `ESP ${live.esp}, ${live.rssi} dBm${live.firmware ? `, Firmware ${live.firmware}` : ''}` : '';
+  document.title = on ? `${live.hx} °C · ${live.headline} – MaraX` : `${live.headline} – MaraX`;
+
+  const fill = css(color);
+  $('favicon').href = 'data:image/svg+xml,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect width="16" height="16" rx="4" fill="${fill}"/></svg>`);
+
+  alertBox(live.historyError ? `Die Daten werden gerade nicht gespeichert: ${live.historyError}` : null);
+}
+
+function alertBox(message) {
+  const box = $('alert');
+  box.classList.toggle('on', !!message);
+  box.replaceChildren(...(message ? [icon('alert', 20), el('span', {}, message)] : []));
+}
+
+function scrub(sample) {
+  state.scrubbing = !!sample;
+  if (!sample) {
+    renderLive();
+    return;
+  }
+  $('heroValue').textContent = sample.hx;
+  $('heroNote').textContent = `HX um ${clockSeconds(sample.at)} Uhr`;
+  $('gSteam').textContent = `${sample.steam} °C`;
+  $('gTarget').textContent = sample.target != null ? `${sample.target} °C` : '--';
+  $('gHeat').textContent = sample.heat ? 'an' : 'aus';
+  $('gPump').textContent = sample.pump ? 'läuft' : 'aus';
+}
+
+function linePath(points, x, y, value) {
+  let path = '';
+  let previous = null;
+  for (const point of points) {
+    if (value(point) == null) { previous = null; continue; }
+    const gap = !previous || point.at - previous.at > GAP_MS;
+    path += `${gap ? 'M' : 'L'}${x(point.at).toFixed(1)} ${y(value(point)).toFixed(1)}`;
+    previous = point;
+  }
+  return path;
+}
+
+function timeTicks(from, to, maxTicks) {
+  const steps = [1, 2, 5, 10, 15, 30, 60, 120, 240, 360].map(minutes => minutes * 60000);
+  const step = steps.find(candidate => (to - from) / candidate <= maxTicks) || steps[steps.length - 1];
+  const offset = new Date(from).getTimezoneOffset() * 60000;
+  const result = [];
+  for (let at = Math.ceil((from - offset) / step) * step + offset; at <= to; at += step) result.push(at);
+  return result;
+}
+
+function nearestSample(samples, at) {
+  let low = 0;
+  let high = samples.length - 1;
+  while (low < high) {
+    const middle = (low + high) >> 1;
+    if (samples[middle].at < at) low = middle + 1;
+    else high = middle;
+  }
+  return low > 0 && at - samples[low - 1].at < samples[low].at - at ? low - 1 : low;
+}
+
+function renderTrace() {
+  const host = $('tracePlot');
+  const detail = state.detail;
+  const session = detail?.session;
+  const live = state.live;
+  const isCurrent = !state.selected && session && live?.sessionId === session.id && machineOn();
+
+  $('traceLatest').hidden = !state.selected;
+  const index = session ? state.sessions.findIndex(s => s.id === session.id) : -1;
+  $('prevSession').disabled = index < 0 || index >= state.sessions.length - 1;
+  $('nextSession').disabled = index <= 0;
+
+  const hasCurve = !!detail && detail.samples.length > 0;
+  $('traceLegend').hidden = !hasCurve || state.tables.has('trace');
+  $('traceTable').hidden = !hasCurve;
+  if (!hasCurve) {
+    $('traceTitle').textContent = 'Temperaturverlauf';
+    host.onpointermove = host.onpointerdown = host.onkeydown = null;
+    host.removeAttribute('tabindex');
+    host.style.cursor = 'default';
+    host.replaceChildren(el('p', { class: 'empty' }, 'Noch keine Aufzeichnung. Sobald die Maschine läuft, entsteht hier die Temperaturkurve.'));
+    $('traceTableView').replaceChildren();
+    return;
+  }
+  host.style.cursor = '';
+
+  const samples = detail.samples;
+  const end = session.endedAt ?? session.lastSeen;
+  const day = $('traceTitle').parentElement.clientWidth < 560 ? dateCompact(session.startedAt) : dateFull(session.startedAt);
+  $('traceTitle').textContent = `${day}, ${clock(session.startedAt)}–${isCurrent ? 'jetzt' : clock(end)}`;
+
+  if (state.tables.has('trace')) {
+    const step = Math.max(1, Math.ceil(samples.length / 200));
+    const rows = samples.filter((_, i) => i % step === 0).map(s => [clockSeconds(s.at), `${s.hx}`, `${s.steam}`, s.target ?? '–', s.heat ? 'an' : 'aus', s.pump ? 'läuft' : 'aus']);
+    $('traceTableView').replaceChildren(table(['Zeit', { t: 'HX °C', n: 1 }, { t: 'Dampf °C', n: 1 }, { t: 'Soll °C', n: 1 }, 'Heizelement', 'Pumpe'], rows));
+    return;
+  }
+
+  const width = host.clientWidth;
+  if (width === 0) return;
+  const narrow = width < 560;
+
+  const height = narrow ? 280 : 400;
+  const margin = { top: 26, right: narrow ? 8 : 92, bottom: 46, left: 36 };
+  const from = Math.min(session.startedAt, samples[0].at);
+  const to = Math.max(samples[samples.length - 1].at, from + 60000);
+  const plotRight = width - margin.right;
+  const plotBottom = height - margin.bottom;
+  const x = at => margin.left + (at - from) / (to - from) * (plotRight - margin.left);
+
+  const values = samples.flatMap(s => [s.hx, s.steam, s.target]).filter(v => v != null);
+  const low = Math.floor(Math.min(...values) / 20) * 20;
+  const high = Math.ceil(Math.max(...values, 100) / 20) * 20;
+  const y = value => plotBottom - (value - low) / (high - low) * (plotBottom - margin.top);
+
+  const root = chartSvg(width, height, `Temperaturverlauf ${dateFull(session.startedAt)}`);
+  yAxis(root, ticks(low, high, (high - low) / 20), y, margin.left, plotRight, value => value);
+
+  for (const at of timeTicks(from, to, Math.floor((plotRight - margin.left) / 70))) {
+    root.append(sv('text', { x: x(at), y: plotBottom + 18, 'text-anchor': 'middle' }, clock(at)));
+  }
+
+  const laneTop = plotBottom + 28;
+  root.append(sv('rect', { x: margin.left, y: laneTop, width: plotRight - margin.left, height: 8, rx: 2, fill: 'var(--wash)' }));
+  for (let i = 0; i < samples.length - 1; i++) {
+    if (samples[i].heat && samples[i + 1].at - samples[i].at <= GAP_MS) {
+      const left = x(samples[i].at);
+      root.append(sv('rect', { x: left, y: laneTop, width: Math.max(1, x(samples[i + 1].at) - left), height: 8, fill: 'var(--heater)' }));
+    }
+  }
+
+  root.append(sv('path', { d: linePath(samples, x, y, s => s.target), fill: 'none', stroke: 'var(--target)', 'stroke-width': 1.5, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' }));
+  root.append(sv('path', { d: linePath(samples, x, y, s => s.steam), fill: 'none', stroke: 'var(--steam)', 'stroke-width': 2, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' }));
+  root.append(sv('path', { d: linePath(samples, x, y, s => s.hx), fill: 'none', stroke: 'var(--hx)', 'stroke-width': 2, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' }));
+
+  if (session.readyAt && session.readyAt >= from) {
+    const readyX = x(session.readyAt);
+    root.append(sv('line', { x1: readyX, x2: readyX, y1: margin.top - 8, y2: plotBottom, stroke: 'var(--axis)' }));
+    const label = session.heatupSeconds != null ? `Aufgeheizt nach ${duration(session.heatupSeconds)}` : 'Aufgeheizt';
+    const flip = readyX > width - 190;
+    root.append(sv('text', { x: readyX + (flip ? -6 : 6), y: margin.top - 12, 'text-anchor': flip ? 'end' : 'start', class: 'strong' }, label));
+  }
+
+  // an espresso sits on the HX curve, hot water comes out of the steam boiler and sits on its curve
+  for (const shot of detail.shots) {
+    const sample = samples[nearestSample(samples, shot.startedAt)];
+    const espresso = shot.kind === 'espresso';
+    root.append(sv('circle', {
+      cx: x(shot.startedAt), cy: y(espresso ? sample.hx : sample.steam), r: espresso ? 5 : 4.5,
+      fill: espresso ? 'var(--ink)' : 'var(--surface)', stroke: espresso ? 'var(--surface)' : 'var(--ink)', 'stroke-width': 2,
+    }));
+  }
+
+  const last = samples[samples.length - 1];
+  const hxY = y(last.hx);
+  const steamY = y(last.steam);
+  for (const [cy, color] of [[hxY, 'var(--hx)'], [steamY, 'var(--steam)']]) {
+    root.append(sv('circle', { cx: plotRight, cy, r: 4, fill: color, stroke: 'var(--surface)', 'stroke-width': 2 }));
+  }
+  if (!narrow) {
+    root.append(sv('text', { x: plotRight + 10, y: hxY + 4, class: 'strong' }, `HX ${last.hx} °C`));
+    if (Math.abs(hxY - steamY) >= 18) root.append(sv('text', { x: plotRight + 10, y: steamY + 4, class: 'strong' }, `Dampf ${last.steam} °C`));
+  }
+
+  const crossLine = sv('line', { y1: margin.top, y2: plotBottom, stroke: 'var(--ink-2)', visibility: 'hidden' });
+  const crossHx = sv('circle', { r: 4, fill: 'var(--hx)', stroke: 'var(--surface)', 'stroke-width': 2, visibility: 'hidden' });
+  const crossSteam = sv('circle', { r: 4, fill: 'var(--steam)', stroke: 'var(--surface)', 'stroke-width': 2, visibility: 'hidden' });
+  root.append(crossLine, crossSteam, crossHx);
+
+  host.replaceChildren(root);
+  attachHover(host, {
+    count: samples.length,
+    pick: px => (px < margin.left - 8 ? -1 : nearestSample(samples, from + (px - margin.left) / (plotRight - margin.left) * (to - from))),
+    show(i) {
+      const sample = samples[i];
+      const px = x(sample.at);
+      crossLine.setAttribute('x1', px);
+      crossLine.setAttribute('x2', px);
+      crossHx.setAttribute('cx', px);
+      crossHx.setAttribute('cy', y(sample.hx));
+      crossSteam.setAttribute('cx', px);
+      crossSteam.setAttribute('cy', y(sample.steam));
+      for (const node of [crossLine, crossHx, crossSteam]) node.setAttribute('visibility', 'visible');
+      scrub(sample);
+      const shot = detail.shots.find(s => Math.abs(s.startedAt - sample.at) <= Math.max(s.durationSeconds * 1000, 15000) && sample.at >= s.startedAt - 15000);
+      const rows = [
+        { color: 'var(--hx)', value: `${sample.hx} °C`, label: 'HX' },
+        { color: 'var(--steam)', value: `${sample.steam} °C`, label: 'Dampf' },
+      ];
+      if (sample.target != null) rows.push({ color: 'var(--target)', value: `${sample.target} °C`, label: 'Soll' });
+      if (shot) rows.push({ color: 'var(--ink)', value: `${number(shot.durationSeconds)} s`, label: shot.kindLabel });
+      return { title: `${clockSeconds(sample.at)} Uhr`, rows, x: px, y: Math.min(y(sample.hx), y(sample.steam)) };
+    },
+    clear() {
+      for (const node of [crossLine, crossHx, crossSteam]) node.setAttribute('visibility', 'hidden');
+      scrub(null);
+    },
+  });
+}
+
+function table(head, rows, rowClass) {
+  return el('table', {},
+    el('thead', {}, el('tr', {}, ...head.map(cell => el('th', { class: cell.n ? 'num' : null, scope: 'col' }, cell.t ?? cell)))),
+    el('tbody', {}, ...rows.map((row, r) => el('tr', { class: rowClass ? rowClass(r) : null },
+      ...row.map((cell, c) => el('td', { class: head[c].n ? 'num' : null }, cell))))));
+}
+
+function renderFigure(id, draw, emptyText, tableData) {
+  const figure = $(id);
+  const host = figure.querySelector('.plot');
+  const tableHost = figure.querySelector('.table-wrap');
+  const showTable = state.tables.has(id);
+  const data = tableData();
+  host.hidden = showTable;
+  tableHost.hidden = !showTable;
+  figure.querySelector('[data-table]').textContent = showTable ? 'Diagramm' : 'Tabelle';
+  if (showTable) {
+    tableHost.replaceChildren(table(data.head, data.rows));
+    return;
+  }
+  if (data.rows.length === 0) {
+    host.onpointermove = host.onpointerdown = host.onkeydown = null;
+    host.removeAttribute('tabindex');
+    host.style.cursor = 'default';
+    host.replaceChildren(el('p', { class: 'empty' }, emptyText));
+    return;
+  }
+  host.style.cursor = '';
+  draw(host);
+}
+
+function dayList() {
+  const end = new Date();
+  end.setHours(12, 0, 0, 0);
+  const start = new Date(end);
+  if (state.days > 0) start.setDate(start.getDate() - state.days + 1);
+  else if (state.daily.length) start.setTime(new Date(`${state.daily[0].day}T12:00:00`).getTime());
+  const counts = new Map(state.daily.map(day => [day.day, day.coffees]));
+  const days = [];
+  for (const date = new Date(start); date <= end; date.setDate(date.getDate() + 1)) {
+    days.push({ key: dayKey(date), at: date.getTime(), coffees: counts.get(dayKey(date)) ?? 0 });
+  }
+  return days;
+}
+
+function drawDaily(host) {
+  const days = dayList();
+  const width = host.clientWidth;
+  const height = 220;
+  const margin = { top: 20, right: 4, bottom: 24, left: 26 };
+  const band = (width - margin.left - margin.right) / days.length;
+  const barWidth = Math.min(24, Math.max(2, band - 2));
+  const plotBottom = height - margin.bottom;
+  const peak = Math.max(...days.map(day => day.coffees), 1);
+  const top = Math.max(4, Math.ceil(peak * 1.1));
+  const y = value => plotBottom - value / top * (plotBottom - margin.top);
+
+  const root = chartSvg(width, height, 'Kaffees pro Tag');
+  yAxis(root, ticks(0, top, 4).filter(Number.isInteger), y, margin.left, width - margin.right, value => value);
+  root.append(sv('line', { x1: margin.left, x2: width - margin.right, y1: plotBottom, y2: plotBottom, stroke: 'var(--axis)' }));
+
+  const centers = days.map((_, i) => margin.left + band * (i + .5));
+  const bars = days.map((day, i) => {
+    if (day.coffees === 0) return null;
+    const left = centers[i] - barWidth / 2;
+    const barTop = y(day.coffees);
+    const radius = Math.min(4, barWidth / 2, plotBottom - barTop);
+    const bar = sv('path', {
+      class: 'bar', fill: 'var(--hx)',
+      d: `M${left} ${plotBottom}V${barTop + radius}Q${left} ${barTop} ${left + radius} ${barTop}H${left + barWidth - radius}Q${left + barWidth} ${barTop} ${left + barWidth} ${barTop + radius}V${plotBottom}Z`,
+    });
+    root.append(bar);
+    return bar;
+  });
+
+  const labelEvery = Math.max(1, Math.ceil(days.length / Math.floor((width - margin.left) / 54)));
+  days.forEach((day, i) => {
+    if ((days.length - 1 - i) % labelEvery === 0) root.append(sv('text', { x: centers[i], y: height - 6, 'text-anchor': 'middle' }, dateShort(day.at)));
+  });
+
+  const peakIndex = days.findLastIndex(day => day.coffees === peak);
+  if (peak > 0 && days[peakIndex]) root.append(sv('text', { x: centers[peakIndex], y: y(peak) - 6, 'text-anchor': 'middle', class: 'strong' }, peak));
+
+  host.replaceChildren(root);
+  let lifted = null;
+  attachHover(host, {
+    count: days.length,
+    pick: px => Math.min(days.length - 1, Math.max(0, Math.floor((px - margin.left) / band))),
+    show(i) {
+      lifted?.classList.remove('on');
+      lifted = bars[i];
+      lifted?.classList.add('on');
+      return {
+        title: new Date(days[i].at).toLocaleDateString(LOCALE, { weekday: 'short', day: 'numeric', month: 'long' }),
+        rows: [{ value: number(days[i].coffees), label: days[i].coffees === 1 ? 'Kaffee' : 'Kaffees' }],
+        x: centers[i], y: y(days[i].coffees),
+      };
+    },
+    clear() { lifted?.classList.remove('on'); lifted = null; },
+  });
+}
+
+function drawSeries(host, points, { label, format, line, reference, zero }) {
+  const width = host.clientWidth;
+  const height = 220;
+  const margin = { top: 16, right: 12, bottom: 24, left: 34 };
+  const plotBottom = height - margin.bottom;
+  const plotRight = width - margin.right;
+  const values = points.map(point => point.value);
+  const low = zero ? 0 : Math.floor(Math.min(...values) / 5) * 5 - 5;
+  const high = Math.ceil(Math.max(...values, low + 5) / 5) * 5;
+  const y = value => plotBottom - (value - low) / (high - low) * (plotBottom - margin.top);
+  const step = points.length > 1 ? (plotRight - margin.left - 12) / (points.length - 1) : 0;
+  const x = i => (points.length > 1 ? margin.left + 6 + step * i : (margin.left + plotRight) / 2);
+
+  const root = chartSvg(width, height, label);
+  yAxis(root, ticks(low, high, 4), y, margin.left, plotRight, value => value);
+
+  if (reference != null) {
+    root.append(sv('line', { x1: margin.left, x2: plotRight, y1: y(reference.value), y2: y(reference.value), stroke: 'var(--ink-2)' }));
+    root.append(sv('text', { x: plotRight, y: y(reference.value) - 6, 'text-anchor': 'end', class: 'mid' }, reference.label));
+  }
+  if (line && points.length > 1) {
+    root.append(sv('path', { d: points.map((point, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)} ${y(point.value).toFixed(1)}`).join(''), fill: 'none', stroke: 'var(--hx)', 'stroke-width': 2, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' }));
+  }
+
+  const radius = points.length > 120 ? 3 : 4;
+  points.forEach((point, i) => root.append(sv('circle', { cx: x(i), cy: y(point.value), r: radius, fill: 'var(--hx)', stroke: 'var(--surface)', 'stroke-width': 2 })));
+
+  const labelCount = Math.min(points.length, Math.floor((plotRight - margin.left) / 72));
+  const every = Math.max(1, Math.ceil(points.length / Math.max(1, labelCount)));
+  let lastLabel = '';
+  points.forEach((point, i) => {
+    const date = dateShort(point.at);
+    if ((points.length - 1 - i) % every !== 0 || date === lastLabel) return;
+    lastLabel = date;
+    root.append(sv('text', { x: x(i), y: height - 6, 'text-anchor': i === points.length - 1 && points.length > 1 ? 'end' : 'middle' }, date));
+  });
+
+  const marker = sv('circle', { r: 6, fill: 'none', stroke: 'var(--ink)', 'stroke-width': 1.5, visibility: 'hidden' });
+  root.append(marker);
+  host.replaceChildren(root);
+  attachHover(host, {
+    count: points.length,
+    pick: px => Math.min(points.length - 1, Math.max(0, step ? Math.round((px - x(0)) / step) : 0)),
+    show(i) {
+      marker.setAttribute('cx', x(i));
+      marker.setAttribute('cy', y(points[i].value));
+      marker.setAttribute('visibility', 'visible');
+      return { title: `${dateShort(points[i].at)}, ${clock(points[i].at)} Uhr`, rows: [{ value: format(points[i]), label: '' }], x: x(i), y: y(points[i].value) };
+    },
+    clear() { marker.setAttribute('visibility', 'hidden'); },
+  });
+}
+
+function drawHours(host) {
+  const weekdays = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
+  const counts = new Map(state.hours.map(cell => [`${(cell.weekday + 6) % 7}-${cell.hour}`, cell.coffees]));
+  const used = state.hours.map(cell => cell.hour);
+  const firstHour = Math.min(6, ...used);
+  const lastHour = Math.max(20, ...used);
+  const hours = lastHour - firstHour + 1;
+  const peak = Math.max(...state.hours.map(cell => cell.coffees), 1);
+
+  const width = host.clientWidth;
+  const left = 28;
+  const cellWidth = (width - left) / hours;
+  const cellHeight = 24;
+  const height = cellHeight * 7 + 22;
+  const root = chartSvg(width, height, 'Kaffees nach Wochentag und Uhrzeit');
+
+  weekdays.forEach((day, row) => {
+    root.append(sv('text', { x: 0, y: row * cellHeight + 16 }, day));
+    for (let hour = 0; hour < hours; hour++) {
+      const count = counts.get(`${row}-${hour + firstHour}`) ?? 0;
+      const level = count === 0 ? 0 : Math.max(1, Math.ceil(count / peak * 5));
+      root.append(sv('rect', {
+        x: left + hour * cellWidth + 1, y: row * cellHeight + 1,
+        width: Math.max(1, cellWidth - 2), height: cellHeight - 2, rx: 3,
+        fill: level ? `var(--h${level})` : 'var(--wash)',
+      }));
+    }
+  });
+  for (let hour = firstHour; hour <= lastHour; hour += 3) {
+    root.append(sv('text', { x: left + (hour - firstHour + .5) * cellWidth, y: height - 4, 'text-anchor': 'middle' }, hour));
+  }
+
+  const marker = sv('rect', { width: Math.max(1, cellWidth - 2), height: cellHeight - 2, rx: 3, fill: 'none', stroke: 'var(--ink)', 'stroke-width': 1.5, visibility: 'hidden' });
+  root.append(marker);
+  host.replaceChildren(root);
+
+  attachHover(host, {
+    count: hours * 7,
+    rowStep: hours,
+    pick(px, py) {
+      if (px < left || py > cellHeight * 7) return -1;
+      return Math.min(6, Math.floor(py / cellHeight)) * hours + Math.min(hours - 1, Math.floor((px - left) / cellWidth));
+    },
+    show(i) {
+      const row = Math.floor(i / hours);
+      const hour = i % hours;
+      const px = left + hour * cellWidth;
+      marker.setAttribute('x', px + 1);
+      marker.setAttribute('y', row * cellHeight + 1);
+      marker.setAttribute('visibility', 'visible');
+      const count = counts.get(`${row}-${hour + firstHour}`) ?? 0;
+      return {
+        title: `${weekdays[row]}, ${hour + firstHour}–${hour + firstHour + 1} Uhr`,
+        rows: [{ value: number(count), label: count === 1 ? 'Kaffee' : 'Kaffees' }],
+        x: px + cellWidth / 2, y: row * cellHeight + cellHeight / 2,
+      };
+    },
+    clear() { marker.setAttribute('visibility', 'hidden'); },
+  });
+}
+
+function renderStats() {
+  const summary = state.summary;
+  if (!summary) return;
+  const label = { 7: 'Letzte 7 Tage', 30: 'Letzte 30 Tage', 90: 'Letzte 90 Tage', 0: 'Insgesamt' }[state.days];
+  const stat = (name, value, unit, extra) => el('div', {},
+    el('dt', {}, name),
+    el('dd', {}, value, unit ? el('small', {}, ` ${unit}`) : null),
+    extra ? el('dd', { class: 'extra' }, extra) : null);
+  const water = count => (count > 0 ? `und ${number(count)}× Heißwasser` : null);
+  const start = summary.firstStartToday
+    ? `${summary.firstStartExact ? '' : 'ca. '}${clock(summary.firstStartToday)}`
+    : '–';
+  $('stats').replaceChildren(
+    stat('Heute', number(summary.coffeesToday), summary.coffeesToday === 1 ? 'Kaffee' : 'Kaffees', water(summary.hotWaterToday)),
+    stat('Heute eingeschaltet', start, summary.firstStartToday ? 'Uhr' : null),
+    stat(label, number(summary.coffees), summary.coffees === 1 ? 'Kaffee' : 'Kaffees', water(summary.hotWater)),
+    stat('Ø Aufheizen', summary.avgHeatupSeconds != null ? duration(summary.avgHeatupSeconds) : '–'),
+    stat('Ø Bezug', summary.avgShotSeconds != null ? number(summary.avgShotSeconds) : '–', summary.avgShotSeconds != null ? 's' : null),
+  );
+}
+
+function renderCharts() {
+  const days = dayList();
+  renderFigure('figDaily', drawDaily, 'Noch kein Kaffee in diesem Zeitraum.', () => ({
+    head: ['Tag', { t: 'Kaffees', n: 1 }],
+    rows: state.daily.length ? days.filter(day => day.coffees > 0).reverse().map(day => [dateShort(day.at), number(day.coffees)]) : [],
+  }));
+
+  const heatups = state.sessions.filter(s => s.heatupSeconds != null && s.coldStart).reverse();
+  const heatupPoints = heatups.map(s => ({ at: s.startedAt, value: s.heatupSeconds / 60, seconds: s.heatupSeconds }));
+  renderFigure('figHeatup', host => drawSeries(host, heatupPoints, {
+    label: 'Aufheizdauer in Minuten', line: true, zero: true, format: point => duration(point.seconds),
+  }), 'Noch kein Kaltstart aufgezeichnet.', () => ({
+    head: ['Start', { t: 'Aufheizdauer', n: 1 }],
+    rows: [...heatups].reverse().map(s => [`${dateShort(s.startedAt)}, ${clock(s.startedAt)}`, duration(s.heatupSeconds)]),
+  }));
+
+  const espressos = state.shots.filter(s => s.kind === 'espresso');
+  const shotPoints = [...espressos].reverse().map(s => ({ at: s.startedAt, value: s.durationSeconds }));
+  const average = state.summary?.avgShotSeconds;
+  renderFigure('figShots', host => drawSeries(host, shotPoints, {
+    label: 'Bezugsdauer in Sekunden', format: point => `${number(point.value, 1)} s`,
+    reference: average != null ? { value: average, label: `Ø ${number(average)} s` } : null,
+  }), 'Noch kein Espresso aufgezeichnet.', () => ({
+    head: ['Zeit', { t: 'Dauer', n: 1 }],
+    rows: espressos.map(s => [`${dateShort(s.startedAt)}, ${clock(s.startedAt)}`, `${number(s.durationSeconds, 1)} s`]),
+  }));
+
+  renderFigure('figHours', drawHours, 'Sobald Kaffees aufgezeichnet sind, zeigt sich hier dein Rhythmus.', () => ({
+    head: ['Wochentag', 'Stunde', { t: 'Kaffees', n: 1 }],
+    rows: state.hours.map(cell => [['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'][cell.weekday], `${cell.hour} Uhr`, number(cell.coffees)]),
+  }));
+  document.querySelector('#figHours .scale').hidden = state.hours.length === 0 || state.tables.has('figHours');
+}
+
+function renderLog() {
+  const host = $('logTable');
+  document.querySelectorAll('#tabs button').forEach(button => button.setAttribute('aria-pressed', button.dataset.tab === state.tab));
+
+  const empty = text => host.replaceChildren(el('p', { class: 'empty' }, text));
+  if (state.tab === 'sessions') {
+    if (!state.sessions.length) return empty('Noch keine Einschaltung aufgezeichnet.');
+    const shown = state.detail?.session.id;
+    host.replaceChildren(table(
+      ['Datum', 'Ein', 'Aufgeheizt nach', 'Aus', { t: 'Laufzeit', n: 1 }, { t: 'Kaffees', n: 1 }, { t: 'HX beim Start', n: 1 }],
+      state.sessions.map(s => [
+        el('button', { onclick: () => selectSession(s.id), 'aria-label': `Kurve vom ${dateShort(s.startedAt)}, ${clock(s.startedAt)} anzeigen` }, dateShort(s.startedAt)),
+        `${s.startExact ? '' : 'ca. '}${clock(s.startedAt)}`,
+        s.heatupSeconds != null ? duration(s.heatupSeconds) : '–',
+        s.endedAt ? clock(s.endedAt) : s.id === state.live?.sessionId && machineOn() ? 'läuft' : clock(s.lastSeen),
+        duration(s.runtimeSeconds),
+        number(s.coffees),
+        `${s.startHx} °C`,
+      ]),
+      r => (state.sessions[r].id === shown ? 'current' : null)));
+  } else if (state.tab === 'shots') {
+    if (!state.shots.length) return empty('Noch kein Bezug aufgezeichnet.');
+    host.replaceChildren(table(
+      ['Zeit', 'Art', { t: 'Dauer', n: 1 }, { t: 'HX Beginn', n: 1 }, { t: 'HX Minimum', n: 1 }, { t: 'Dampf', n: 1 }, 'Modus'],
+      state.shots.map(s => [
+        `${dateShort(s.startedAt)}, ${clock(s.startedAt)}`, s.kindLabel, `${number(s.durationSeconds, 1)} s`,
+        `${s.hxStart} °C`, `${s.hxMin} °C`, `${s.steamStart} °C`, s.mode,
+      ])));
+  } else {
+    if (!state.events.length) return empty('Noch keine Ereignisse.');
+    host.replaceChildren(table(
+      ['Zeit', 'Ereignis', 'Details'],
+      state.events.map(e => [`${dateShort(e.at)}, ${clockSeconds(e.at)}`, e.label, e.detail])));
+  }
+  return undefined;
+}
+
+function renderAll() {
+  renderLive();
+  renderTrace();
+  renderStats();
+  renderCharts();
+  renderLog();
+}
+
+async function loadDetail() {
+  const path = state.selected ? `/api/session/${state.selected}` : '/api/session/latest';
+  state.detail = await api(path);
+  renderTrace();
+  renderLog();
+}
+
+async function loadHistory() {
+  const query = `?days=${state.days}`;
+  const [summary, daily, hours, sessions, shots, events] = await Promise.all([
+    api(`/api/summary${query}`), api(`/api/daily${query}`), api(`/api/hours${query}`),
+    api(`/api/sessions${query}`), api(`/api/shots${query}`), api(`/api/events${query}`),
+  ]);
+  Object.assign(state, { summary, daily, hours, sessions, shots, events });
+  await loadDetail();
+  renderLive();
+  renderStats();
+  renderCharts();
+  renderLog();
+}
+
+function selectSession(id) {
+  state.selected = id;
+  loadDetail();
+  $('verlauf').scrollIntoView();
+}
+
+function stepSession(offset) {
+  const index = state.sessions.findIndex(s => s.id === state.detail?.session.id);
+  const next = state.sessions[index + offset];
+  if (!next) return;
+  state.selected = index + offset === 0 ? null : next.id;
+  loadDetail();
+}
+
+async function pollLive() {
+  try {
+    const live = await api('/api/live');
+    const changed = !state.live || live.revision !== state.live.revision || live.sessionId !== state.live.sessionId;
+    state.live = live;
+    renderLive();
+    if (changed) await loadHistory();
+    if (state.unreachable) { state.unreachable = false; alertBox(null); }
+  } catch {
+    state.unreachable = true;
+    alertBox('Keine Verbindung zur Tray-App. Läuft MaraxTray noch auf dem PC?');
+  }
+  setTimeout(pollLive, LIVE_INTERVAL);
+}
+
+function setDays(days) {
+  state.days = days;
+  try { localStorage.setItem('marax-days', days); } catch { /* the choice just isn't remembered */ }
+  document.querySelectorAll('#range button').forEach(button => button.setAttribute('aria-pressed', Number(button.dataset.days) === days));
+  document.querySelector('.charts').classList.add('loading');
+  loadHistory().catch(() => {}).finally(() => document.querySelector('.charts').classList.remove('loading'));
+}
+
+function init() {
+  $('prevSession').append(icon('left', 20));
+  $('nextSession').append(icon('right', 20));
+  $('prevSession').onclick = () => stepSession(1);
+  $('nextSession').onclick = () => stepSession(-1);
+  $('traceLatest').onclick = () => { state.selected = null; loadDetail(); };
+
+  $('traceTable').onclick = () => {
+    const showTable = !state.tables.delete('trace');
+    if (showTable) state.tables.add('trace');
+    $('tracePlot').hidden = showTable;
+    $('traceTableView').hidden = !showTable;
+    $('traceTable').textContent = showTable ? 'Diagramm' : 'Tabelle';
+    renderTrace();
+  };
+
+  document.querySelectorAll('[data-table]').forEach(button => {
+    button.onclick = () => {
+      const id = button.closest('figure').id;
+      if (!state.tables.delete(id)) state.tables.add(id);
+      renderCharts();
+    };
+  });
+  document.querySelectorAll('#range button').forEach(button => { button.onclick = () => setDays(Number(button.dataset.days)); });
+  document.querySelectorAll('#tabs button').forEach(button => { button.onclick = () => { state.tab = button.dataset.tab; renderLog(); }; });
+
+  let resizeFrame = 0;
+  let lastWidth = 0;
+  new ResizeObserver(entries => {
+    const width = entries[0].contentRect.width;
+    if (width === lastWidth) return;
+    lastWidth = width;
+    cancelAnimationFrame(resizeFrame);
+    resizeFrame = requestAnimationFrame(renderAll);
+  }).observe(document.querySelector('main'));
+
+  setInterval(() => {
+    if (!state.selected && machineOn() && !state.scrubbing) loadDetail().catch(() => {});
+  }, CURVE_INTERVAL);
+
+  let days = 30;
+  try { days = Number(localStorage.getItem('marax-days') ?? 30); } catch { /* the default applies */ }
+  state.days = [7, 30, 90, 0].includes(days) ? days : 30;
+  document.querySelectorAll('#range button').forEach(button => button.setAttribute('aria-pressed', Number(button.dataset.days) === state.days));
+
+  api('/api/config').then(config => {
+    state.config = config;
+    $('note').textContent = `Als Espresso zählt ein Pumpenlauf von ${config.minShotSeconds} bis ${config.maxShotSeconds} Sekunden, bei dem die Maschine die Brühgruppe meldet. Läuft die Pumpe ohne diese Meldung, füllt sie nur den Dampfkessel nach: lange Läufe erscheinen als Heißwasser, kurze gar nicht. Was passiert, während die Tray-App nicht läuft, fehlt hier.`;
+  }).catch(() => {});
+  pollLive();
+}
+
+init();
+</script>
+</body>
+</html>
