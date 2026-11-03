@@ -7,16 +7,22 @@
 #include <Adafruit_SSD1306.h>
 #include <Adafruit_GFX.h>
 #include <ESP8266WiFi.h>
+#include <WiFiUdp.h>
 #include <Wire.h>
 #include <Timer.h>
 #include <SoftwareSerial.h>
+#include "marax_protocol.h"
+#include "secrets.h"
 
 Adafruit_SSD1306 display(128, 64, &Wire, -1);
 SoftwareSerial mySerial(D5, D6);
 Timer t;
+WiFiUDP udp;
 
 // set to true/false when using another type of reed sensor
 bool reedOpenSensor = true;
+// set to 0 or 2 to turn the display by 180 degrees
+int displayRotation = 2;
 bool displayOn = true;
 int timerCount = 0;
 int prevTimerCount = 0;
@@ -33,8 +39,24 @@ static byte ndx = 0;
 char endMarker = '\n';
 char rc;
 
+const uint16_t STATUS_PORT = 4210;
+const unsigned long STATUS_INTERVAL_MILLIS = 1000;
+const unsigned long MACHINE_TIMEOUT_MILLIS = 5000;
+
+MaraxData machineData;
+char lastLine[numChars];
+unsigned long validLineMillis = 0;
+unsigned long lastLineMillis = 0;
+unsigned long statusSentMillis = 0;
+unsigned long badLines = 0;
+bool machineSeen = false;
+bool lineSeen = false;
+bool wifiConnected = false;
+bool lastPumpSent = false;
+IPAddress statusTarget;
+
 void setup() {
-  WiFi.mode(WIFI_OFF);
+  setupWifi();
 
   Serial.begin(9600);
   mySerial.begin(9600);
@@ -48,6 +70,7 @@ void setup() {
   memset(receivedChars, 0, numChars );
 
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
+  display.setRotation(displayRotation);
   display.clearDisplay();
   display.setTextColor(WHITE);
   display.display();
@@ -58,6 +81,87 @@ void loop() {
   t.update();
   detectChanges();
   getMachineInput();
+  updateNetwork();
+}
+
+void setupWifi() {
+  if (strlen(WIFI_SSID) == 0) {
+    WiFi.mode(WIFI_OFF);
+    return;
+  }
+  WiFi.persistent(false);
+  WiFi.mode(WIFI_STA);
+  WiFi.hostname("marax-timer");
+  WiFi.setAutoReconnect(true);
+  // does not wait for the connection, the timer has to run without a network
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+}
+
+bool machineOnline() {
+  return machineSeen && millis() - validLineMillis < MACHINE_TIMEOUT_MILLIS;
+}
+
+bool pumpRunning() {
+  return timerStarted || (machineOnline() && machineData.hasPump && machineData.pump);
+}
+
+void updateNetwork() {
+  if (strlen(WIFI_SSID) == 0) {
+    return;
+  }
+  bool connected = WiFi.status() == WL_CONNECTED;
+  if (connected != wifiConnected) {
+    wifiConnected = connected;
+    if (connected) {
+      Serial.print("WiFi connected, IP ");
+      Serial.println(WiFi.localIP());
+      if (!statusTarget.fromString(STATUS_TARGET_IP)) {
+        statusTarget = WiFi.broadcastIP();
+      }
+    } else {
+      Serial.println("WiFi disconnected");
+    }
+  }
+  if (connected && (pumpRunning() != lastPumpSent || millis() - statusSentMillis >= STATUS_INTERVAL_MILLIS)) {
+    sendStatus();
+  }
+}
+
+void sendStatus() {
+  statusSentMillis = millis();
+  lastPumpSent = pumpRunning();
+
+  MaraxStatus status;
+  status.machine = machineOnline() ? &machineData : NULL;
+  status.rawLine = lineSeen && millis() - lastLineMillis < MACHINE_TIMEOUT_MILLIS ? lastLine : "";
+  status.pump = lastPumpSent;
+  status.shotSeconds = timerStarted ? (millis() - timerStartMillis) / 1000 : 0;
+  status.rssi = WiFi.RSSI();
+  status.uptimeSeconds = millis() / 1000;
+  status.badLines = badLines;
+
+  char packet[256];
+  size_t length = formatMaraxStatus(packet, sizeof(packet), status);
+  if (length > 0) {
+    udp.beginPacket(statusTarget, STATUS_PORT);
+    udp.write((const uint8_t*)packet, length);
+    udp.endPacket();
+  }
+}
+
+void handleMachineLine() {
+  strcpy(lastLine, receivedChars);
+  lastLineMillis = millis();
+  lineSeen = true;
+
+  MaraxData parsed;
+  if (parseMaraxLine(receivedChars, &parsed)) {
+    machineData = parsed;
+    validLineMillis = millis();
+    machineSeen = true;
+  } else {
+    badLines++;
+  }
 }
 
 void getMachineInput() {
@@ -75,6 +179,7 @@ void getMachineInput() {
       receivedChars[ndx] = '\0';
       ndx = 0;
       Serial.println(receivedChars);
+      handleMachineLine();
     }
   }
 
@@ -123,7 +228,7 @@ void detectChanges() {
 }
 
 String getTimer() {
-  char outMin[2];
+  char outMin[3];
   if (timerStarted) {
     timerCount = (millis() - timerStartMillis ) / 1000;
     if (timerCount > 15) {

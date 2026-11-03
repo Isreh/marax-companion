@@ -1,2 +1,6 @@
 .DS_Store
 .history
+timer/secrets.h
+bin/
+obj/
+pc/publish/

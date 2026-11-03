@@ -1,0 +1,7 @@
+{"dev":"marax","v":1,"online":true,"mode":"+","fw":"1.22","hx":70,"steam":112,"target":124,"boost":900,"heat":true,"pump":false,"shot":0,"rssi":-61,"uptime":1234,"bad":2,"raw":"+1.22,112,124,070,0900,1,0"}
+{"dev":"marax","v":1,"online":true,"mode":"+","fw":"1.22","hx":93,"steam":124,"target":124,"boost":0,"heat":false,"pump":false,"shot":0,"rssi":-61,"uptime":1234,"bad":2,"raw":"+1.22,124,124,093,0000,0,0"}
+{"dev":"marax","v":1,"online":true,"mode":"C","fw":"1.06","hx":93,"steam":124,"target":124,"boost":0,"heat":true,"pump":true,"shot":12,"rssi":-61,"uptime":1234,"bad":2,"raw":"C1.06,124,124,093,0000,1,1"}
+{"dev":"marax","v":1,"online":true,"mode":"C","fw":"1.06","hx":97,"steam":112,"target":124,"boost":0,"heat":false,"pump":false,"shot":0,"rssi":-61,"uptime":1234,"bad":2,"raw":"C1.06,112,124,097,0000,0"}
+{"dev":"marax","v":1,"online":true,"mode":"C","fw":"1.09","hx":22,"steam":22,"target":null,"boost":0,"heat":false,"pump":false,"shot":0,"rssi":-61,"uptime":1234,"bad":2,"raw":"C1.09,022,D07,022,0000,0,0"}
+{"dev":"marax","v":1,"online":false,"pump":false,"shot":0,"rssi":-61,"uptime":1234,"bad":2,"raw":""}
+{"dev":"marax","v":1,"online":false,"pump":false,"shot":0,"rssi":-61,"uptime":1234,"bad":2,"raw":"Z,unknown,format"}
