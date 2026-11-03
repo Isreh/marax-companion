@@ -1,4 +1,15 @@
-# marax_timer
+# marax_timer with WiFi, Windows tray and statistics
+
+An extended version of [alexrus/marax_timer](https://github.com/alexrus/marax_timer). The ESP8266 still shows the shot timer on its OLED, and it also sends the machine's status over WiFi to a Windows PC.
+
+- **Tray icon** with the heat exchanger temperature, colored by state: heating up, ready, pump running, water tank.
+- **Statistics in the browser** at `http://localhost:8420`, also from a phone in the home network: the temperature curve of every session, espressos per day, heat-up time, shot time and the hours you make coffee.
+- **Espresso or hot water:** the Mara X V2 reports when the brew group is in use, so hot water drawn from the steam boiler doesn't count as coffee.
+- CSV export for Excel. No cloud, everything stays on your PC.
+
+Tested with a Lelit Mara X V2 (PL62X, firmware 1.09) and a NodeMCU with a CH340 USB chip. The setup guide, the tray app and the web page are in German: [ANLEITUNG.md](ANLEITUNG.md).
+
+## Original project
 
 ***This repository is a rewrite of [espresso_timer](https://github.com/alexrus/espresso_timer) that has better documentation and is easier to use.***
 
@@ -57,6 +68,10 @@ If the timer immediately starts, even when the machine is off, a wrong reed sens
 ### UI
 
 ![](resources/ui.jpg)
+
+### Windows taskbar
+
+The ESP can send the machine's status over WiFi to a Windows tray icon, which also collects statistics and shows them on a local web page, see [ANLEITUNG.md](ANLEITUNG.md) (German). Set `WIFI_SSID` in `timer/secrets.h` to enable it, without it WiFi stays off.
 
 
 ### Dependencies
